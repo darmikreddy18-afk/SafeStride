@@ -1,124 +1,61 @@
 # SafeStride
 
-SafeStride is a smart mobility and safety project focused on making everyday movement safer for elderly people and people with mobility difficulties.
+SafeStride is a smart mobility and safety project built around a connected walker for elderly people and people with mobility difficulties.
 
-The current prototype is a connected smart walker that can detect obstacles, identify possible falls, provide directional feedback, send SOS alerts, share location, and connect a user with a caregiver through a mobile application.
+The current prototype combines an ESP32, distance sensors, an accelerometer, GPS, GSM and Bluetooth with a Flutter mobile application and Firebase backend.
 
-The project is being developed as an India-first, affordable assistive technology platform rather than as a single-purpose walking aid.
+The goal is to add useful safety features to a conventional walker while keeping the system practical and affordable for the Indian market.
 
----
+## What We've Built
 
-## Why SafeStride?
+The current prototype supports:
 
-Traditional walkers help with physical support, but they do not know when the user is approaching an obstacle, falling, or needs immediate assistance.
-
-SafeStride explores how low-cost sensors, embedded systems, wireless communication, and a mobile application can add an additional layer of safety around a conventional mobility aid.
-
-The goal is simple:
-
-> Make assistive technology more connected without making it unnecessarily expensive or complicated.
-
----
-
-## Current Prototype
-
-The current SafeStride prototype is built around an ESP32 and includes:
-
-* Obstacle detection
+* Obstacle detection using VL53L0X ToF sensors
 * Directional vibration feedback
-* Fall detection
+* Fall detection using an ADXL345 accelerometer
 * SOS button
 * GPS location tracking
 * GSM communication
-* Bluetooth connectivity
-* Ambient light detection
+* Bluetooth/BLE communication with the mobile app
+* Light detection
 * LED and buzzer alerts
-* Caregiver notifications
-* "Find My Walker" functionality
-
-The walker makes immediate safety decisions locally on the ESP32 while communicating relevant information to the mobile application.
-
----
+* Walker status synchronisation
+* Patient and guardian accounts
+* Family ID-based caregiver connection
+* Guardian access requests and approval
+* Patient location and walker monitoring
 
 ## Hardware
 
-### Main Controller
+The current prototype uses:
 
 * ESP32 DevKit
-
-### Sensors
-
 * ADXL345 accelerometer
-* 2 × VL53L0X ToF distance sensors
-* 2 × LDR light sensors
-* NEO-6M GPS module
-
-### Communication
-
-* Bluetooth / BLE
+* 2 × VL53L0X ToF sensors
+* 2 × LDR sensors
+* NEO-6M GPS
 * SIM800L GSM module
-
-### User Feedback
-
-* Left vibration motor
-* Right vibration motor
+* Left and right vibration motors
 * Buzzer
 * LED
 * SOS push button
 
-The current prototype uses commercially available development modules so that the system can be tested and modified quickly. A future production version will move toward a custom PCB and a more integrated mechanical design.
+The current hardware uses development modules to make prototyping and testing easier. The next hardware iteration will move toward a custom PCB and a more integrated mechanical design.
 
----
+## Mobile Application
 
-## How It Works
+The mobile application is built with Flutter.
 
-At a high level:
-
-```text
-                    SafeStride Walker
-                           |
-                         ESP32
-                           |
-          +----------------+----------------+
-          |                |                |
-       Sensors         Local Safety     Communication
-          |              Logic               |
-          |                |          +------+------+
-          |                |          |             |
-      ToF / IMU       Alerts / Haptic  BLE        GSM
-      / Light             Feedback      |             |
-                                        |             |
-                                        v             v
-                                  SafeStride App   Remote Alerts
-                                        |
-                                        v
-                                     Firebase
-                                        |
-                                        v
-                                  Caregiver App
-```
-
-The ESP32 handles time-sensitive safety functionality locally. The application and backend are used for monitoring, family connections, alerts, and device information.
-
----
-
-# SafeStride Mobile App
-
-The mobile application is being developed using Flutter.
-
-The current application includes two main user roles:
+There are currently two user roles:
 
 ### Patient
 
-The patient is the primary SafeStride walker user.
+The patient uses the application to connect to the SafeStride walker and access features such as:
 
-The patient side currently includes:
-
-* SafeStride walker connection
-* Bluetooth communication
+* Walker connection
 * Walker status
 * GPS location
-* SOS alerts
+* SOS
 * Fall alerts
 * Find My Walker
 * Family ID
@@ -127,83 +64,27 @@ The patient side currently includes:
 
 ### Guardian
 
-The guardian/caregiver side is designed to provide visibility into the connected patient's SafeStride device.
+The guardian dashboard provides information about the connected patient and walker, including:
 
-The guardian dashboard includes:
-
-* Connected patient information
+* Patient information
 * Walker connection status
 * Safety status
-* Battery information
+* Battery status
 * Last known location
-* Latest event
-* Family connection
-* Patient monitoring
+* Latest walker event
+* Family connection status
 
----
+## Family ID
 
-# Family Connection
+SafeStride uses a Family ID system to connect a patient with a guardian.
 
-SafeStride uses a Family ID based connection system rather than requiring a caregiver to manually search for a patient's account.
+A patient receives a Family ID when creating an account. A guardian can enter that ID to find the patient and send an access request.
 
-The basic flow is:
+The patient has to approve the request before the accounts are linked.
 
-```text
-Patient creates account
-        ↓
-SafeStride generates Family ID
-        ↓
-Patient shares Family ID
-        ↓
-Guardian enters Family ID
-        ↓
-Guardian sends access request
-        ↓
-Patient approves request
-        ↓
-Patient + Guardian are linked
-        ↓
-Guardian can monitor the connected patient
-```
+This gives the patient control over who can access their information.
 
-The relationship is stored in Firebase so that access can be managed at the account level.
-
----
-
-# Firebase Backend
-
-Firebase is currently used for the application's backend infrastructure.
-
-Current architecture:
-
-```text
-Flutter App
-    |
-    +---- Firebase Authentication
-    |
-    +---- Cloud Firestore
-    |
-    +---- Firebase Cloud Messaging
-    |
-    +---- Cloud Functions
-```
-
-Firestore currently stores information such as:
-
-* User profiles
-* Patient / guardian roles
-* Family IDs
-* Access requests
-* Family relationships
-* Walker status
-* Walker location
-* Alerts
-
-The project also contains a Firebase Functions setup for server-side functionality.
-
----
-
-# Bluetooth Communication
+## Bluetooth
 
 The ESP32 currently advertises as:
 
@@ -211,50 +92,83 @@ The ESP32 currently advertises as:
 SafeStride_ESP32
 ```
 
-The Flutter application discovers the walker over BLE and communicates with it through a custom service/characteristic.
+The Flutter application uses `flutter_blue_plus` for BLE communication.
 
-Current BLE service:
+The current implementation uses a custom BLE service and characteristic for communication between the walker and the application.
 
-```text
-Service:
-6E400001-B5A3-F393-E0A9-E50E24DCCA9E
+## Firebase
 
-Characteristic:
-6E400002-B5A3-F393-E0A9-E50E24DCCA9E
-```
+Firebase is currently used for authentication, database storage and backend functionality.
 
-The BLE layer is used for communicating walker status, GPS information, alerts, and commands between the ESP32 and the mobile application.
+The project uses:
 
----
-
-# Development Status
-
-SafeStride is currently at the working prototype stage.
-
-### Completed
-
-* ESP32-based walker prototype
-* Obstacle detection
-* Directional vibration feedback
-* Fall detection logic
-* SOS functionality
-* GPS integration
-* GSM integration
-* Bluetooth communication
-* Flutter application
 * Firebase Authentication
-* Firestore integration
-* Patient / guardian roles
-* Family ID system
-* Guardian access requests
-* Patient approval flow
-* Guardian dashboard
-* Walker status synchronization
-* GPS data synchronization
-* GitHub project setup
+* Cloud Firestore
+* Firebase Cloud Functions
+* Firebase Cloud Messaging
 
-### Currently being developed
+Firestore currently stores user information, family connections, access requests, walker status, locations and alerts.
 
-* More reliable automatic notifications
-* Better background communication
-* Production-oriented hardware d
+The application is being structured so that safety-critical functions can continue to operate locally on the ESP32 instead of depending completely on an internet connection.
+
+## Technology Stack
+
+**Firmware / Hardware**
+
+* ESP32
+* Arduino/C++
+* ADXL345
+* VL53L0X
+* NEO-6M
+* SIM800L
+* BLE
+
+**Mobile**
+
+* Flutter
+* Dart
+* Flutter Blue Plus
+
+**Backend**
+
+* Firebase Authentication
+* Cloud Firestore
+* Firebase Cloud Functions
+* Firebase Cloud Messaging
+
+**Development**
+
+* Android Studio
+* VS Code
+* Git
+* GitHub
+
+## Current Status
+
+SafeStride is currently in the working prototype and engineering-development stage.
+
+The basic hardware, Bluetooth communication, Flutter application and Firebase integration are working.
+
+The current focus is on improving reliability and preparing the system for more structured testing.
+
+Areas still being worked on include:
+
+* Better fall-detection reliability
+* Reducing false alerts
+* Battery optimization
+* More reliable background communication
+* Device identification
+* Custom PCB development
+* Mechanical redesign
+* Mechanical and electrical safety testing
+* User testing
+
+## Future Work
+
+The longer-term plan is to develop SafeStride beyond the current walker prototype.
+
+Possible future devices include a smart wearable, walking stick and other safety-oriented assistive devices.
+
+The wearable side will explore health-related sensing such as heart rate, SpO₂ and ECG. These features will require proper validation before being presented as medical measurements.
+
+Another area I want to explore is an AI-based conversational assistant that co
